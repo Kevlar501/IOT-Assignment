@@ -139,6 +139,8 @@ If motion is detected:
 
 ## Repository Structure
 IOT-Assignment/
+|
+├── requirements.txt
 │
 ├── sensor/
 │   ├── sensor_reader.py
@@ -231,10 +233,26 @@ The Flask dashboard displays the most recent image automatically.
 
 ## How to Run the System
 
-### 1. Create and activate a virtual environment
+### 1. Install system‑level dependencies (REQUIRED on Raspberry Pi)
+These must be installed **before** creating or activating a virtual environment.
+
+sudo apt update
+sudo apt install python3-opencv python3-picamera2 libatlas-base-dev pkg-config
+
+This installs:
+
+- OpenCV (ARM‑optimized, no FFmpeg build required)
+- PiCamera2 (official Raspberry Pi camera library)
+- Linear algebra libraries required by OpenCV
+- pkg-config (needed for various Python wheels)
+
+### 2. Create and activate a virtual environment
 #### It is recommended to run the project inside a Python virtual environment:
 python3 -m venv .venv
 source .venv/bin/activate
+
+### 3. Install Python dependencies inside the venv
+pip install -r requirements.txt
 
 ### 3. Start the MQTT broker
 sudo systemctl start mosquitto
