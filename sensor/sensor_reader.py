@@ -78,7 +78,7 @@ def joystick_event(event):
     if event.action == "pressed":
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
-        blynk.update("V3", 0)
+        blynk.update("V6", 1)   # suppression ON
         publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
 
@@ -94,6 +94,13 @@ def main():
     time.sleep(0.2)
 
     while True:
+
+        # Suppression check (calculated before Blynk updates)
+        suppression_active = (
+            alert_suppressed_until is not None and
+            datetime.datetime.now() < alert_suppressed_until
+        )
+
         # Read sensors
         temp = sense.get_temperature()
         hum = sense.get_humidity()
@@ -105,33 +112,39 @@ def main():
         publish("plant/pressure", pres)
 
         # Update Blynk
-        blynk.update("V1", 1 if temp < TEMP_LOW else 0)
-        blynk.update("V2", 1 if temp > TEMP_HIGH else 0)
-        blynk.update("V3", 1 if hum < HUM_LOW else 0)
-        blynk.update("V4", 1 if hum > HUM_HIGH else 0)
+        blynk.update("V1", 1 if temp < TEMP_LOW else 0) # low temp alert
+        blynk.update("V2", 1 if temp > TEMP_HIGH else 0) # high temp alert
+        blynk.update("V3", 1 if hum < HUM_LOW else 0) # low humidity alert
+        blynk.update("V4", 1 if hum > HUM_HIGH else 0) # high humidity alert
+        blynk.update("V5", 0)   # reset motion alert each loop
+        blynk.update("V6", 1 if suppression_active else 0)   # suppression indicator
 
-        # Check suppression
-        suppression_active = (
-            alert_suppressed_until is not None and
-            datetime.datetime.now() < alert_suppressed_until
-        )
+        # Threshold alert checks
+        if not suppression_active:
 
-        # Threshold alert
-        temp_alert = temp < TEMP_LOW or temp > TEMP_HIGH
-        hum_alert = hum < HUM_LOW or hum > HUM_HIGH
-        if not suppression_active and (temp_alert or hum_alert):
-            publish("plant/alert", "Threshold exceeded")
-            blynk.update("V3", 1)
+            if temp < TEMP_LOW:
+                publish("plant/alert", "Temperature LOW")
 
-            if not led_flashing:
-                stop_flashing = False
-                threading.Thread(target=flash_leds, daemon=True).start()
+            if temp > TEMP_HIGH:
+                publish("plant/alert", "Temperature HIGH")
+
+            if hum < HUM_LOW:
+                publish("plant/alert", "Humidity LOW")
+
+            if hum > HUM_HIGH:
+                publish("plant/alert", "Humidity HIGH")
+
+            # LED flashing for ANY threshold alert
+            if (temp < TEMP_LOW or temp > TEMP_HIGH or hum < HUM_LOW or hum > HUM_HIGH):
+                if not led_flashing:
+                    stop_flashing = False
+                    threading.Thread(target=flash_leds, daemon=True).start()
 
         # Motion detection
         curr_frame = picam.capture_array()
         if detect_motion(prev_frame, curr_frame):
             publish("plant/alert", "Motion detected")
-            blynk.update("V4", 1)
+            blynk.update("V5", 1)
 
         prev_frame = curr_frame
 
