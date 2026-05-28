@@ -139,8 +139,9 @@ If motion is detected:
 
 ## Repository Structure
 IOT-Assignment/
-|
+│
 ├── requirements.txt
+├── README.md
 │
 ├── sensor/
 │   ├── sensor_reader.py
@@ -154,11 +155,9 @@ IOT-Assignment/
 │   └── templates/
 │       └── index.html
 │
-├── data/
-│   ├── sensor_log.csv
-│   └── latest.jpg
-│
-└── README.md
+└── data/
+    ├── sensor_log.csv
+    └── latest.jpg
 
 ---
 
