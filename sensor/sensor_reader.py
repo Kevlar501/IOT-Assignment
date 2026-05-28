@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import paho.mqtt.client as mqtt
 from blynkapi import Blynk
+from camera_capture import capture_frame, save_image
 
 # -----------------------------
 # CONFIGURATION
@@ -57,13 +58,6 @@ def flash_leds():
         time.sleep(12)
     sense.clear()
     led_flashing = False
-
-# -----------------------------
-# CAPTURE IMAGE
-# -----------------------------
-def capture_image():
-    frame = picam.capture_array()
-    cv2.imwrite("data/latest.jpg", frame)
 
 # -----------------------------
 # MOTION DETECTION
@@ -129,7 +123,6 @@ def main():
         if not suppression_active and (temp_alert or hum_alert):
             mqtt_client.publish("plant/alert", "Threshold exceeded")
             blynk.update("V3", 1)
-            capture_image()
 
             if not led_flashing:
                 stop_flashing = False
@@ -140,7 +133,6 @@ def main():
         if detect_motion(prev_frame, curr_frame):
             mqtt_client.publish("plant/alert", "Motion detected")
             blynk.update("V4", 1)
-            capture_image()
 
         prev_frame = curr_frame
 

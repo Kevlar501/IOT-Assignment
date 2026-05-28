@@ -157,7 +157,8 @@ IOT-Assignment/
 |         |___ index.html
 |___ data/
      |——— sensor_log.csv
-     |___ latest.jpg
+     |——— latest.jpg
+     |___ images/
 ```
 
 ---
