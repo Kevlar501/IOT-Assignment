@@ -138,26 +138,27 @@ If motion is detected:
 ---
 
 ## Repository Structure
+```text
 IOT-Assignment/
-│
-├── requirements.txt
-├── README.md
-│
-├── sensor/
-│   ├── sensor_reader.py
-│   ├── camera_capture.py
-│   ├── mqtt_publisher.py
-│   └── motion_detector.py
-│
-├── dashboard/
-│   ├── app.py
-│   ├── static/
-│   └── templates/
-│       └── index.html
-│
-└── data/
-    ├── sensor_log.csv
-    └── latest.jpg
+|
+|——— requirements.txt
+|——— README.MD
+|
+|——— sensor/
+|    |——— sensor_reader.py
+|    |——— camera_capture.py
+|    |——— mqtt_publisher.py
+|    |___ motion_detector.py
+|
+|——— dashboard/
+|    |——— app.py
+|    |——— static/
+|    |___ templates/
+|         |___ index.html
+|___ data/
+     |——— sensor_log.csv
+     |___ latest.jpg
+```
 
 ---
 
