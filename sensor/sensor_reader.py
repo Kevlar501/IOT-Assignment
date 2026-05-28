@@ -6,8 +6,8 @@ from sense_hat import SenseHat
 from picamera2 import Picamera2
 import cv2
 import numpy as np
-import paho.mqtt.client as mqtt
-from blynkapi import Blynk
+from mqtt_publisher import publish
+from blynkapi import Blynk # type: ignore
 from camera_capture import capture_frame, save_image
 
 # -----------------------------
@@ -20,7 +20,7 @@ TEMP_HIGH = 30.0
 HUM_LOW = 30.0
 HUM_HIGH = 80.0
 SUPPRESSION_HOURS = 3
-MQTT_BROKER = "localhost"
+MQTT_BROKER = "broker.hivemq.com"
 BLYNK_TOKEN = "YOUR_BLYNK_TOKEN"
 
 # -----------------------------
@@ -35,8 +35,7 @@ picam.start()
 
 blynk = Blynk(BLYNK_TOKEN)
 
-mqtt_client = mqtt.Client()
-mqtt_client.connect(MQTT_BROKER, 1883, 60)
+''' MQTT handled by mqtt_publisher.py '''
 
 # -----------------------------
 # STATE VARIABLES
@@ -80,7 +79,7 @@ def joystick_event(event):
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
         blynk.update("V3", 0)
-        mqtt_client.publish("plant/alert", "Alert acknowledged")
+        publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
 
 sense.stick.direction_any = joystick_event
@@ -101,9 +100,9 @@ def main():
         pres = sense.get_pressure()
 
         # Publish to MQTT
-        mqtt_client.publish("plant/temperature", temp)
-        mqtt_client.publish("plant/humidity", hum)
-        mqtt_client.publish("plant/pressure", pres)
+        publish("plant/temperature", temp)
+        publish("plant/humidity", hum)
+        publish("plant/pressure", pres)
 
         # Update Blynk
         blynk.update("V1", 1 if temp < TEMP_LOW else 0)
@@ -121,7 +120,7 @@ def main():
         temp_alert = temp < TEMP_LOW or temp > TEMP_HIGH
         hum_alert = hum < HUM_LOW or hum > HUM_HIGH
         if not suppression_active and (temp_alert or hum_alert):
-            mqtt_client.publish("plant/alert", "Threshold exceeded")
+            publish("plant/alert", "Threshold exceeded")
             blynk.update("V3", 1)
 
             if not led_flashing:
@@ -131,7 +130,7 @@ def main():
         # Motion detection
         curr_frame = picam.capture_array()
         if detect_motion(prev_frame, curr_frame):
-            mqtt_client.publish("plant/alert", "Motion detected")
+            publish("plant/alert", "Motion detected")
             blynk.update("V4", 1)
 
         prev_frame = curr_frame

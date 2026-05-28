@@ -1,5 +1,5 @@
 sense-hat
 paho-mqtt
 flask
-blynk-library-python
+blynkapi
 numpy
