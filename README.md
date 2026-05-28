@@ -246,7 +246,7 @@ python3 sensor/sensor_reader.py
 python3 dashboard/app.py
 
 ### 6. Open the dashboard
-Visit: http://<raspberry-pi-ip>:5000
+Visit: http://YOUR_PI_IP_HERE:5000
 
 
 ---
