@@ -235,27 +235,29 @@ The Flask dashboard displays the most recent image automatically.
 
 ### 1. Install system‑level dependencies (REQUIRED on Raspberry Pi)
 These must be installed **before** creating or activating a virtual environment.
-
+#### 1.1
 sudo apt update
-sudo apt install python3-opencv python3-picamera2 libatlas-base-dev pkg-config
+#### 1.2
+sudo apt install python3-opencv python3-picamera2 pkg-config
 
 This installs:
 
 - OpenCV (ARM‑optimized, no FFmpeg build required)
 - PiCamera2 (official Raspberry Pi camera library)
-- Linear algebra libraries required by OpenCV
 - pkg-config (needed for various Python wheels)
 
 ### 2. Create and activate a virtual environment
 #### It is recommended to run the project inside a Python virtual environment:
+#### 2.1 
 python3 -m venv .venv
+#### 2.2
 source .venv/bin/activate
 
 ### 3. Install Python dependencies inside the venv
-pip install -r requirements.txt
+pip install -r requirements.txt (this only needs to be run once)
 
 ### 3. Start the MQTT broker
-sudo systemctl start mosquitto
+sudo systemctl start mosquitto (only if not running automatically)
 
 ### 4. Run the sensor reader
 python3 sensor/sensor_reader.py
@@ -266,6 +268,9 @@ python3 dashboard/app.py
 ### 6. Open the dashboard
 Visit: http://YOUR_PI_IP_HERE:5000
 
+### Normal Operations After Setup
+In this order, run Sections: 2.2, 4, 5, & 6. This is the normal order of command operations to
+re-run the system after it has been run at least once. 
 
 ---
 
