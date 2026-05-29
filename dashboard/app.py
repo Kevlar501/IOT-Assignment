@@ -31,24 +31,32 @@ state = {
 }
 
 # -----------------------------
-# CSV LOGGING
+# CSV LOGGING (Every 30 Seconds)
 # -----------------------------
 def log_sensor_data():
+    """Logs the consolidated state data at scheduled intervals."""
+    # Ensure all key values are populated before writing a log entry
+    if state["temperature"] is None or state["humidity"] is None or state["pressure"] is None:
+        return
+        
     os.makedirs("../data", exist_ok=True)
     path = "../data/sensor_log.csv"
 
     write_header = not os.path.exists(path)
 
-    with open(path, "a", newline="") as f:
-        writer = csv.writer(f)
-        if write_header:
-            writer.writerow(["timestamp", "temperature", "humidity", "pressure"])
-        writer.writerow([
-            time.strftime("%Y-%m-%d %H:%M:%S"),
-            state["temperature"],
-            state["humidity"],
-            state["pressure"]
-        ])
+    try:
+        with open(path, "a", newline="") as f:
+            writer = csv.writer(f)
+            if write_header:
+                writer.writerow(["timestamp", "temperature", "humidity", "pressure"])
+            writer.writerow([
+                time.strftime("%Y-%m-%d %H:%M:%S"),
+                state["temperature"],
+                state["humidity"],
+                state["pressure"]
+            ])
+    except IOError as e:
+        print(f"[Storage Error] Failed writing data entry to disk: {e}")
 
 # -----------------------------
 # MQTT CALLBACKS
@@ -69,20 +77,25 @@ def on_message(client, userdata, msg):
     elif topic == "plant/alert":
         state["alert"] = payload
 
-        # Motion alert
-        if payload == "Motion detected":
+        # Motion alert logic matching hardware flags
+        if "Motion detected" in payload:
             state["motion"] = 1
-        else:
+        elif "Alert acknowledged" in payload:
             state["motion"] = 0
-
-    # Log sensor values
-    log_sensor_data()
+            state["suppression"] = 1
+            
+        # Parse threshold indicators to synchronize with dashboard widgets
+        if "Temperature LOW" in payload: state["temp_low"] = 1
+        if "Temperature HIGH" in payload: state["temp_high"] = 1
+        if "Humidity LOW" in payload: state["hum_low"] = 1
+        if "Humidity HIGH" in payload: state["hum_high"] = 1
 
 # -----------------------------
-# MQTT THREAD
+# BACKGROUND THREADS
 # -----------------------------
 def mqtt_thread():
-    client = mqtt.Client()
+    # FIX 1: Native support for your environment's modern Paho MQTT 2.x API 
+    client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
     client.on_message = on_message
     client.connect("broker.hivemq.com", 1883, 60)
 
@@ -93,7 +106,15 @@ def mqtt_thread():
 
     client.loop_forever()
 
+def continuous_logger():
+    """FIX 2: Handles CSV logging safely on an isolated 30-second loop."""
+    while True:
+        time.sleep(30)
+        log_sensor_data()
+
+# Start background services smoothly
 threading.Thread(target=mqtt_thread, daemon=True).start()
+threading.Thread(target=continuous_logger, daemon=True).start()
 
 # -----------------------------
 # ROUTES
@@ -108,10 +129,15 @@ def data():
 
 @app.route("/latest.jpg")
 def latest_image():
-    return send_file("../data/latest.jpg", mimetype="image/jpeg")
+    # FIX 3: Prevents internal 500 error crashes if camera hasn't shot a baseline frame yet
+    path = "../data/latest.jpg"
+    if not os.path.exists(path):
+        return send_file(os.devnull, mimetype="image/jpeg")
+    return send_file(path, mimetype="image/jpeg")
 
 # -----------------------------
 # RUN
 # -----------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Disable debug reloader to prevent duplication of your background MQTT threads
+    app.run(host="0.0.0.0", port=5000, debug=False)

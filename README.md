@@ -153,6 +153,12 @@ IOT-Assignment/
 |——— dashboard/
 |    |——— app.py
 |    |——— static/
+|    |    |——— css/
+|    |    |    |___styles.css
+|    |    |
+|    |    |___ images/
+|    |         |___ background.png
+|    |
 |    |___ templates/
 |         |___ index.html
 |___ data/
@@ -235,43 +241,74 @@ The Flask dashboard displays the most recent image automatically.
 ## How to Run the System
 
 ### 1. Install system‑level dependencies (REQUIRED on Raspberry Pi)
-These must be installed **before** creating or activating a virtual environment.
-#### 1.1
+These must be installed globally on your Raspberry Pi OS **before** setting up the virtual environment to ensure the physical hardware sensors and camera can be accessed.
+
+```bash
 sudo apt update
-#### 1.2
-sudo apt install python3-opencv python3-picamera2 pkg-config
+sudo apt install python3-opencv python3-picamera2 python3-rtimulib pkg-config
+```
 
 This installs:
-
-- OpenCV (ARM‑optimized, no FFmpeg build required)
-- PiCamera2 (official Raspberry Pi camera library)
-- pkg-config (needed for various Python wheels)
+- **python3-rtimulib**: Pre-compiled hardware drivers for the Sense Hat IMU chip (required for Python 3.13+).
+- **python3-picamera2**: Official Raspberry Pi camera interaction framework.
+- **python3-opencv**: ARM‑optimized computer vision modules for background motion detection processing.
+- **pkg-config**: Package compilation tools required for modern Python wheels.
 
 ### 2. Create and activate a virtual environment
-#### It is recommended to run the project inside a Python virtual environment:
-#### 2.1 
-python3 -m venv .venv
-#### 2.2
+You **must** use the `--system-site-packages` flag when creating your virtual environment. This allows the isolated sandbox environment to link directly with the global hardware drivers (`Picamera2` and `RTIMU`) installed via `apt`:
+
+```bash
+# Create the environment with explicit hardware permissions
+python3 -m venv --system-site-packages .venv
+
+# Activate the virtual environment
 source .venv/bin/activate
+```
 
 ### 3. Install Python dependencies inside the venv
-pip install -r requirements.txt (this only needs to be run once)
+With your virtual environment active, run the module installer tool:
 
-### 3. Start the MQTT broker
-sudo systemctl start mosquitto (only if not running automatically)
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-### 4. Run the sensor reader
+### 4. Configuration Check
+Before launching the services, open `sensor/sensor_reader.py` and ensure:
+1. Your unique **Blynk Auth Token** is pasted into the `BLYNK_TOKEN` configuration field.
+2. The Blynk instance is explicitly targeted to the modern cloud architecture: 
+   `blynk = BlynkLib.Blynk(BLYNK_TOKEN, server="blynk.cloud", port=80)`
+
+### 5. Start the Services
+
+#### 5.1 Start the local MQTT broker
+```bash
+sudo systemctl start mosquitto
+```
+*(Only required if your system broker does not launch automatically on boot)*
+
+#### 5.2 Run the sensor gateway pipeline
+```bash
 python3 sensor/sensor_reader.py
+```
 
-### 5. Start the Flask dashboard
+#### 5.3 Start the Flask web application
+Open a **new terminal window or tab**, activate the virtual environment (`source .venv/bin/activate`), and run:
+```bash
 python3 dashboard/app.py
+```
 
-### 6. Open the dashboard
-Visit: http://YOUR_PI_IP_HERE:5000
+### 6. Access the System Dashboard
+Open any web browser on your local network and visit:
+`http://<YOUR_PI_IP_ADDRESS>:5000`
+
+---
 
 ### Normal Operations After Setup
-In this order, run Sections: 2.2, 4, 5, & 6. This is the normal order of command operations to
-re-run the system after it has been run at least once. 
+To boot up your environment on subsequent runs after completing the initial installations, execute your commands in this exact order:
+1. **Activate Environment**: `source .venv/bin/activate`
+2. **Start Gateway Pipeline**: `python3 sensor/sensor_reader.py`
+3. **Start Web Interface** (In separate shell): `python3 dashboard/app.py`
 
 ---
 
