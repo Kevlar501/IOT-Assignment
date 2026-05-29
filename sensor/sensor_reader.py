@@ -79,6 +79,7 @@ def joystick_event(event):
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
         blynk.update("V6", 1)   # suppression ON
+        blynk.update("V5", 0)   # clear motion alert
         publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
 

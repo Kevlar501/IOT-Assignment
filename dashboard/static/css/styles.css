@@ -1,0 +1,38 @@
+body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 10px;
+            max-width: 600px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .alert {
+            color: red;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: green;
+        }
+
+        img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+        }
