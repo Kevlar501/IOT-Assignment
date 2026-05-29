@@ -1,41 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="../static/css/styles.css">
     <meta charset="UTF-8">
     <title>Plant Monitoring Dashboard</title>
 
 </head>
 <body>
 
-<h1>Plant Monitoring Dashboard</h1>
+<div class="card">
+    <h1>Plant Monitoring Dashboard</h1>
 
 <!-- SENSOR DATA -->
-<div class="card">
     <h2>Live Sensor Data</h2>
-    <p><span class="label">Temperature:</span> <span id="temp">--</span> °C</p>
-    <p><span class="label">Humidity:</span> <span id="hum">--</span> %</p>
-    <p><span class="label">Pressure:</span> <span id="pres">--</span> hPa</p>
-</div>
+        <p><span class="label">Temperature:</span> <span id="temp">--</span> °C</p>
+        <p><span class="label">Humidity:</span> <span id="hum">--</span> %</p>
+        <p><span class="label">Pressure:</span> <span id="pres">--</span> hPa</p>
 
 <!-- ALERT STATES -->
-<div class="card">
     <h2>Alert Status</h2>
 
-    <p>Temp Low: <span id="v1" class="ok">0</span></p>
-    <p>Temp High: <span id="v2" class="ok">0</span></p>
-    <p>Humidity Low: <span id="v3" class="ok">0</span></p>
-    <p>Humidity High: <span id="v4" class="ok">0</span></p>
-    <p>Motion: <span id="v5" class="ok">0</span></p>
-    <p>Suppression Active: <span id="v6" class="ok">0</span></p>
+        <p>Temp Low: <span id="v1" class="ok">0</span></p>
+        <p>Temp High: <span id="v2" class="ok">0</span></p>
+        <p>Humidity Low: <span id="v3" class="ok">0</span></p>
+        <p>Humidity High: <span id="v4" class="ok">0</span></p>
+        <p>Motion: <span id="v5" class="ok">0</span></p>
+        <p>Suppression Active: <span id="v6" class="ok">0</span></p>
 
-    <p><span class="label">Latest Alert:</span> <span id="alert">None</span></p>
-</div>
+        <p><span class="label">Latest Alert:</span> <span id="alert">None</span></p>
 
 <!-- CAMERA IMAGE -->
-<div class="card">
     <h2>Latest Camera Image</h2>
-    <img id="cam" src="/latest.jpg" alt="Latest Image">
+        <img id="cam" src="/latest.jpg" alt="Latest Image">
 </div>
 
 <script>
