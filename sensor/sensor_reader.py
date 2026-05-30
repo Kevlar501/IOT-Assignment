@@ -60,37 +60,35 @@ def joystick_event(event):
     if event.action == "pressed":
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
-        blynk.virtual_write("V6", 1)   
-        blynk.virtual_write("V5", 0)   
+        blynk.virtual_write(6, 1)      
         publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
+sense.stick.direction_any = joystick_event
 
 # -----------------------------
 # BLYNK REMOTE SUPPRESSION CONTROL (V6)
 # -----------------------------
-@blynk.on("V6")
 def remote_suppression_control(value):
     global alert_suppressed_until, stop_flashing
 
     state = int(value[0])
 
     if state == 1:
-        # Activate suppression for 3 hours
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
         publish("plant/alert", "Remote suppression activated")
         print("Remote suppression activated")
     else:
-        # Turn suppression OFF immediately
         alert_suppressed_until = None
         stop_flashing = True
         publish("plant/alert", "Remote suppression deactivated")
         print("Remote suppression deactivated")
 
-    # Update Blynk LED state
-    blynk.virtual_write("V6", state)
+    # Keep Blynk LED in sync
+    blynk.virtual_write(6, state)
 
-sense.stick.direction_any = joystick_event
+# Register the handler explicitly
+blynk.on(6, remote_suppression_control)
 
 # -----------------------------
 # TASK 1: ENVIRONMENTAL SENSORS (Every 30 Seconds)
@@ -114,14 +112,14 @@ def read_environmental_sensors():
         publish("plant/pressure", pres)
 
         # Send data to Blynk
-        blynk.virtual_write("V1", 1 if temp < TEMP_LOW else 0) 
-        blynk.virtual_write("V2", 1 if temp > TEMP_HIGH else 0) 
-        blynk.virtual_write("V3", 1 if hum < HUM_LOW else 0) 
-        blynk.virtual_write("V4", 1 if hum > HUM_HIGH else 0) 
-        blynk.virtual_write("V6", 1 if suppression_active else 0)
-        blynk.virtual_write("V7", temp)
-        blynk.virtual_write("V8", hum)
-        blynk.virtual_write("V9", pres)   
+        blynk.virtual_write(1, 1 if temp < TEMP_LOW else 0) 
+        blynk.virtual_write(2, 1 if temp > TEMP_HIGH else 0) 
+        blynk.virtual_write(3, 1 if hum < HUM_LOW else 0) 
+        blynk.virtual_write(4, 1 if hum > HUM_HIGH else 0) 
+        blynk.virtual_write(6, 1 if suppression_active else 0)
+        blynk.virtual_write(7, temp)
+        blynk.virtual_write(8, hum)
+        blynk.virtual_write(9, pres)   
 
         if not suppression_active:
             alert_triggered = False
@@ -161,12 +159,12 @@ def run_camera_motion_check():
         # This routes directly to motion_detector.py logic
         if prev_frame is not None and detect_motion(prev_frame, curr_frame):
             publish("plant/alert", "Motion detected")
-            blynk.virtual_write("V5", 1)
+            blynk.virtual_write(5, 1)
             
             # Explicitly trigger image write to update latest.jpg on disk
             save_image()
         else:
-            blynk.virtual_write("V5", 0) 
+            blynk.virtual_write(5, 0) 
             
         prev_frame = curr_frame
     finally:
