@@ -3,7 +3,7 @@ import time
 import threading
 import datetime
 from sense_hat import SenseHat
-import BlynkLib
+import BlynkLib # type: ignore
 
 # ─── MODULAR SUB-SCRIPT IMPORTS ───
 from mqtt_publisher import publish
@@ -65,6 +65,31 @@ def joystick_event(event):
         publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
 
+# -----------------------------
+# BLYNK REMOTE SUPPRESSION CONTROL (V6)
+# -----------------------------
+@blynk.on("V6")
+def remote_suppression_control(value):
+    global alert_suppressed_until, stop_flashing
+
+    state = int(value[0])
+
+    if state == 1:
+        # Activate suppression for 3 hours
+        alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
+        stop_flashing = True
+        publish("plant/alert", "Remote suppression activated")
+        print("Remote suppression activated")
+    else:
+        # Turn suppression OFF immediately
+        alert_suppressed_until = None
+        stop_flashing = True
+        publish("plant/alert", "Remote suppression deactivated")
+        print("Remote suppression deactivated")
+
+    # Update Blynk LED state
+    blynk.virtual_write("V6", state)
+
 sense.stick.direction_any = joystick_event
 
 # -----------------------------
@@ -93,7 +118,10 @@ def read_environmental_sensors():
         blynk.virtual_write("V2", 1 if temp > TEMP_HIGH else 0) 
         blynk.virtual_write("V3", 1 if hum < HUM_LOW else 0) 
         blynk.virtual_write("V4", 1 if hum > HUM_HIGH else 0) 
-        blynk.virtual_write("V6", 1 if suppression_active else 0)   
+        blynk.virtual_write("V6", 1 if suppression_active else 0)
+        blynk.virtual_write("V7", temp)
+        blynk.virtual_write("V8", hum)
+        blynk.virtual_write("V9", pres)   
 
         if not suppression_active:
             alert_triggered = False
