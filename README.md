@@ -1,6 +1,6 @@
 # Smart Plant Monitoring & Remote Web Dashboard
 
-This project implements a complete IoT‑based plant‑monitoring system using a Raspberry Pi, Sense HAT, Raspberry Pi Camera, MQTT messaging, a Flask web dashboard, and a Blynk mobile dashboard. The system collects real environmental data, publishes it to an MQTT broker, displays it on a web interface, and supports simulated sensor data using Cisco Packet Tracer.
+This project implements a complete IoT‑based plant‑monitoring system using a Raspberry Pi, Sense HAT, Raspberry Pi Camera, MQTT messaging, a Flask web dashboard, and a Blynk mobile dashboard. The system collects real environmental data, publishes it to an MQTT broker, and displays it on a web interface.
 
 In addition to basic monitoring, the system includes **threshold‑based alerts**, **automatic image capture**, **Sense HAT LED warnings**, **event acknowledgement logic**, and **motion detection** to identify potential pests.
 
@@ -17,7 +17,6 @@ The goal of this project is to build a real IoT system capable of monitoring pla
 - Mobile monitoring through Blynk (including notifications)
 - Web‑based monitoring through a Flask dashboard
 - Motion detection to identify possible pests
-- Simulated IoT data using Packet Tracer for testing and validation
 
 The system supports both real hardware inputs and simulated sensor values, allowing full testing even when hardware is unavailable.
 
@@ -39,8 +38,7 @@ The system supports both real hardware inputs and simulated sensor values, allow
 ### 2. MQTT Broker
 Handles lightweight publish/subscribe messaging for:
 
-- Real sensor data  
-- Simulated Packet Tracer data  
+- Real sensor data   
 - Dashboard updates  
 - Alert events  
 
@@ -58,19 +56,8 @@ Provides:
 
 - Live temperature, humidity, pressure  
 - Push notifications for alerts  
-- Optional SMS/email integration  
+- Optional SMS/email integration (In Progress)  
 - LED control on the Sense HAT  
-
-### 5. Packet Tracer Simulation
-Used to:
-
-- Generate fake sensor data  
-- Test MQTT communication  
-- Validate dashboard behaviour under extreme or offline conditions  
-
-This ensures the system can be tested even when hardware is unavailable.
-
----
 
 ## Alert & Event Logic
 
@@ -82,15 +69,16 @@ When a threshold is exceeded:
 1. **An alert is sent**  
    - Blynk push notification  
    - Dashboard alert message  
-   - Optional SMS/email (depending on configuration)
+   - Optional SMS/email (depending on configuration) (In Progress)
 
 2. **A picture is taken**  
-   - Saved as `data/latest.jpg`  
-   - Displayed on the dashboard  
+   - Saved as `data/latest.jpg`
+   - Saved as a timestamped image in images folder  
+   - latest.jpg is displayed on the dashboard  
 
 3. **Sense HAT LEDs flash red**  
    - 3 seconds ON  
-   - 12 seconds OFF  
+   - 3 seconds OFF  
    - Repeats until condition resolves or event is acknowledged  
 
 ### Event Acknowledgement (Sense HAT Joystick)
@@ -126,7 +114,6 @@ If motion is detected:
 - MQTT (Mosquitto)  
 - Blynk  
 - SSH  
-- Cisco Packet Tracer  
 - Libraries:  
   - `sense-hat`  
   - `picamera2`  
@@ -143,6 +130,7 @@ IOT-Assignment/
 |
 |——— requirements.txt
 |——— README.MD
+|——— clear.sh
 |
 |——— sensor/
 |    |——— sensor_reader.py
@@ -309,6 +297,7 @@ To boot up your environment on subsequent runs after completing the initial inst
 1. **Activate Environment**: `source .venv/bin/activate`
 2. **Start Gateway Pipeline**: `python3 sensor/sensor_reader.py`
 3. **Start Web Interface** (In separate shell): `python3 dashboard/app.py`
+4. **Clear images and cache** run  `./clear.sh` from the main project folder or the alias `clean`
 
 ---
 
@@ -322,4 +311,4 @@ You may not copy, distribute, modify, or use this code in any project
 from the author.
 
 If you would like to request permission to use this code, please  
-contact me at: [Your Contact Email/Method].
+contact me at: [kcaseysawyer@yahoo.com].
