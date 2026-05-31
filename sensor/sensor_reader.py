@@ -198,6 +198,7 @@ def run_camera_motion_check():
             
             # Explicitly trigger image write to update latest.jpg on disk
             save_image()
+            publish("plant/image", "Image captured")
         else:
             # Only turn the LED off if the 3-second cooldown window has passed
             if current_time >= motion_led_expiry:

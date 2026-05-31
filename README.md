@@ -189,25 +189,15 @@ IOT-Assignment/
 
 | Virtual Pin | Data |
 |-------------|------|
-| V0 | Temperature |
-| V1 | Humidity |
-| V2 | Pressure |
-| V3 | Alert status |
-| V4 | Motion detection status |
-
----
-
-## Packet Tracer Simulation
-
-Packet Tracer is used to:
-
-- Simulate IoT sensor nodes  
-- Publish fake MQTT data  
-- Test dashboard behaviour under controlled conditions  
-- Validate system reliability  
-
-This ensures the system can be tested even when hardware is unavailable.
-
+| V1 | Temperature Low Alert |
+| V2 | Temperature High Alert |
+| V3 | Humidity Low Alert |
+| V4 | Humditiy High Alert |
+| V5 | Motion detection status |
+| V6 | Suppression status |
+| V7 | Temperature |
+| V8 | Humidity |
+| V9 | Pressure |
 ---
 
 ## Image Capture
