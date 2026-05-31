@@ -37,6 +37,9 @@ led_flashing = False
 stop_flashing = False
 prev_frame = None
 
+# Motion tracking state variable
+motion_led_expiry = 0.0  # Tracks when the motion LED should turn off
+
 # -----------------------------
 # LED FLASHING THREAD
 # -----------------------------
@@ -47,7 +50,7 @@ def flash_leds():
         sense.clear((255, 0, 0))
         time.sleep(3)
         sense.clear()
-        time.sleep(12)
+        time.sleep(3)
     sense.clear()
     led_flashing = False 
 
@@ -55,12 +58,23 @@ def flash_leds():
 # JOYSTICK ACKNOWLEDGEMENT
 # -----------------------------
 def joystick_event(event):
-    global alert_suppressed_until, stop_flashing
+    global alert_suppressed_until, stop_flashing, motion_led_expiry
 
     if event.action == "pressed":
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
+        
+        # Keep button states in sync
         blynk.virtual_write(6, 1)      
+        
+        # Force clear all alert and motion LEDs immediately on joystick press
+        blynk.virtual_write(1, 0)
+        blynk.virtual_write(2, 0)
+        blynk.virtual_write(3, 0)
+        blynk.virtual_write(4, 0)
+        blynk.virtual_write(5, 0)
+        motion_led_expiry = 0.0  # Reset motion cooldown timer
+        
         publish("plant/alert", "Alert acknowledged, suppression active")
         print("Alert acknowledged. Suppression active.")
 sense.stick.direction_any = joystick_event
@@ -69,13 +83,22 @@ sense.stick.direction_any = joystick_event
 # BLYNK REMOTE SUPPRESSION CONTROL (V6)
 # -----------------------------
 def remote_suppression_control(value):
-    global alert_suppressed_until, stop_flashing
+    global alert_suppressed_until, stop_flashing, motion_led_expiry
 
     state = int(value[0])
 
     if state == 1:
         alert_suppressed_until = datetime.datetime.now() + datetime.timedelta(hours=SUPPRESSION_HOURS)
         stop_flashing = True
+        
+        # Clear all indicator LEDs immediately when remote suppression is turned ON
+        blynk.virtual_write(1, 0)
+        blynk.virtual_write(2, 0)
+        blynk.virtual_write(3, 0)
+        blynk.virtual_write(4, 0)
+        blynk.virtual_write(5, 0)
+        motion_led_expiry = 0.0
+        
         publish("plant/alert", "Remote suppression activated")
         print("Remote suppression activated")
     else:
@@ -112,10 +135,18 @@ def read_environmental_sensors():
         publish("plant/pressure", pres)
 
         # Send data to Blynk
-        blynk.virtual_write(1, 1 if temp < TEMP_LOW else 0) 
-        blynk.virtual_write(2, 1 if temp > TEMP_HIGH else 0) 
-        blynk.virtual_write(3, 1 if hum < HUM_LOW else 0) 
-        blynk.virtual_write(4, 1 if hum > HUM_HIGH else 0) 
+        # Turn indicators OFF if suppression is active, otherwise evaluate normally
+        if suppression_active:
+            blynk.virtual_write(1, 0) 
+            blynk.virtual_write(2, 0) 
+            blynk.virtual_write(3, 0) 
+            blynk.virtual_write(4, 0) 
+        else:
+            blynk.virtual_write(1, 1 if temp < TEMP_LOW else 0) 
+            blynk.virtual_write(2, 1 if temp > TEMP_HIGH else 0) 
+            blynk.virtual_write(3, 1 if hum < HUM_LOW else 0) 
+            blynk.virtual_write(4, 1 if hum > HUM_HIGH else 0) 
+            
         blynk.virtual_write(6, 1 if suppression_active else 0)
         blynk.virtual_write(7, temp)
         blynk.virtual_write(8, hum)
@@ -150,21 +181,27 @@ def read_environmental_sensors():
 # TASK 2: LIVE MOTION CAMERA POLLING (Every 1 Second)
 # -----------------------------
 def run_camera_motion_check():
-    global prev_frame
+    global prev_frame, motion_led_expiry
     
     try:
         # Use capture_frame() utility from camera_capture.py
         curr_frame = capture_frame()
+        current_time = time.time()
         
         # This routes directly to motion_detector.py logic
         if prev_frame is not None and detect_motion(prev_frame, curr_frame):
             publish("plant/alert", "Motion detected")
+            
+            # Turn LED on and set its expiration timestamp to 3 seconds from now
             blynk.virtual_write(5, 1)
+            motion_led_expiry = current_time + 3.0
             
             # Explicitly trigger image write to update latest.jpg on disk
             save_image()
         else:
-            blynk.virtual_write(5, 0) 
+            # Only turn the LED off if the 3-second cooldown window has passed
+            if current_time >= motion_led_expiry:
+                blynk.virtual_write(5, 0) 
             
         prev_frame = curr_frame
     finally:
